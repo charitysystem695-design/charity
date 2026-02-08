@@ -12,12 +12,13 @@
         #login-box { display: block; }
         #system-content { display: none; }
         input, select, button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; font-size: 1.1em; outline: none; box-sizing: border-box; }
-        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
         #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; }
         #result { display: none; text-align: right; border-top: 6px solid #28a745; margin-top: 25px; padding-top: 15px; }
         .info { font-size: 1.05em; margin-bottom: 12px; border-bottom: 1px solid #f1f1f1; padding-bottom: 8px; }
         .label { font-weight: bold; color: #5f6368; }
-        #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #d93025; }
+        #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #d93025; min-height: 24px; }
         .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s infinite; vertical-align: middle; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -60,20 +61,22 @@
 
 <script>
     const users = { "ندى": "123", "أحمد": "123", "محمد": "123" };
-    // تأكد أن هذا الرابط هو رابط الـ Executed API وليس رابط الشيت
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzRvIDgFGnJtac_IeSNQ5rjyJUUnes7OLQ3GgrMnoXLnfi9d_BXThR7mULY4HhP6Hnh/exec';
+    // الرابط الجديد الذي أرسلته
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzkG-x_-dyiCyOz3YOsdBMwiK73crkxzt3eQ6XKqWoMTAwK3bcvO3Sgu0_hVYkOQ_6q/exec';
     
     let currentID = "";
     let html5QrCode;
+    let currentUser = "";
 
     function checkLogin() {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
         if (users[u] === p) {
+            currentUser = u;
             document.getElementById('login-box').style.display = 'none';
             document.getElementById('system-content').style.display = 'block';
             initCameraList();
-        } else { alert("خطأ في البيانات"); }
+        } else { alert("خطأ في بيانات الدخول"); }
     }
 
     function initCameraList() {
@@ -88,55 +91,84 @@
                 });
                 startScanner(devices[devices.length - 1].id);
             }
-        });
+        }).catch(err => alert("خطأ في الوصول للكاميرا: " + err));
     }
 
     function startScanner(id) {
-        if(html5QrCode) { html5QrCode.stop().then(() => { doStart(id); }); }
-        else { doStart(id); }
+        if(html5QrCode) {
+            html5QrCode.stop().then(() => { doStart(id); }).catch(() => { doStart(id); });
+        } else { doStart(id); }
     }
 
     function doStart(id) {
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start(id, { fps: 10, qrbox: 250 }, (txt) => {
-            let scanId = txt;
+            let scanId = txt.trim();
+            // إذا كان الرابط يحتوي على id=
             if (txt.includes("id=")) {
-                const url = new URL(txt);
-                scanId = url.searchParams.get("id");
+                const urlParams = new URLSearchParams(txt.split('?')[1]);
+                scanId = urlParams.get("id");
             }
             currentID = scanId;
             html5QrCode.pause(true);
             fetchData(scanId);
-        });
+        }).catch(err => console.error(err));
     }
 
     function fetchData(id) {
         const msgDiv = document.getElementById('msg');
-        msgDiv.innerHTML = '<div class="spinner"></div> جاري البحث عن الرقم: ' + id;
+        msgDiv.innerHTML = '<div class="spinner"></div> جاري البحث عن: ' + id;
         
-        // أضفنا Timestamp لمنع التخزين المؤقت (Cache)
-        fetch(`${scriptURL}?id=${id}&t=${new Date().getTime()}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
+        fetch(`${scriptURL}?id=${id}`)
+            .then(response => response.json())
             .then(data => {
-                console.log("Data received:", data);
                 if (data && data !== "Not Found") {
                     document.getElementById('result').style.display = 'block';
-                    document.getElementById('res-name').innerText = data[1] || "غير متوفر";
-                    document.getElementById('res-id').innerText = data[2] || "غير متوفر";
+                    document.getElementById('res-name').innerText = data[1] || "غير مسجل"; // عمود B
+                    document.getElementById('res-id').innerText = data[2] || "غير مسجل";   // عمود C
                     msgDiv.innerHTML = "";
                 } else {
-                    alert("❌ هذا الرقم (" + id + ") غير موجود في قاعدة البيانات");
+                    alert("❌ هذا الرقم غير موجود في الكشوفات");
                     resetScanner();
                 }
             })
             .catch(error => {
-                console.error("Fetch error:", error);
-                alert("❌ خطأ في الاتصال بالخادم. تأكد من نشر السكريبت كـ (Anyone) ووصول الإنترنت.");
+                alert("❌ فشل الاتصال بقاعدة البيانات. تأكد من نشر السكريبت بشكل صحيح.");
                 resetScanner();
             });
+    }
+
+    function submitDelivery() {
+        const btn = document.getElementById('submitBtn');
+        const aid = document.getElementById('aidType').value;
+        const msgDiv = document.getElementById('msg');
+
+        btn.disabled = true;
+        btn.innerText = "⏳ جاري الحفظ...";
+
+        const payload = {
+            id: currentID,
+            aidType: aid,
+            recorderName: currentUser
+        };
+
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors', // لضمان تخطي مشاكل الـ CORS في تطبيقات الويب البسيطة
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            alert("✅ تم تسجيل الاستلام بنجاح لـ: " + document.getElementById('res-name').innerText);
+            resetScanner();
+            btn.disabled = false;
+            btn.innerText = "✅ تأكيد الاستلام";
+        })
+        .catch(err => {
+            alert("❌ حدث خطأ أثناء الحفظ");
+            btn.disabled = false;
+        });
     }
 
     function resetScanner() {
