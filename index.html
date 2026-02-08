@@ -73,7 +73,7 @@
     "طارق": "123" 
 };
         // الرابط الجديد بتاعك
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxT0XYUWsSFACdnprNhQHc8X9Ncl1Ze5ZVkI-sFxv_w1nrlVCC47sfxgDeGBoK0NWpD/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzUt4afvQZ9Sqk0b011yXNP7vtaNiBowPvFDyCV93tkRBzZ6FvxzYVufqqqUyj_vtNh/exec';
         
         let currentID = "";
         let loggedUser = "";
@@ -92,14 +92,14 @@
             } else { document.getElementById('login-error').style.display = 'block'; }
         }
 
-        function initScanner() {
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-                fps: 10, qrbox: 250,
-                videoConstraints: { facingMode: { exact: "environment" } },
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA, Html5QrcodeScanType.SCAN_TYPE_FILE]
-            });
-            html5QrcodeScanner.render(onScanSuccess);
-        }
+function initScanner() {
+    html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+        fps: 20, // زيادة عدد الإطارات يجعل المسح أسرع
+        qrbox: { width: 250, height: 250 }, // تحديد منطقة المسح
+        aspectRatio: 1.0
+    });
+    html5QrcodeScanner.render(onScanSuccess);
+}
 
         function onScanSuccess(decodedText) {
             if (!isScanning) return;
