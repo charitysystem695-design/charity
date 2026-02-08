@@ -34,6 +34,8 @@
                 <option value="ندى">ندى</option>
                 <option value="أحمد">أحمد</option>
                 <option value="محمد">محمد</option>
+                <option value="علي">علي</option>
+                <option value="طارق">طارق</option>
             </select>
             <input type="password" id="password" placeholder="كلمة السر">
             <button onclick="checkLogin()">دخول للنظام</button>
@@ -49,7 +51,7 @@
                 <div class="info"><span class="label">الرقم القومي:</span> <span id="res-id"></span></div>
                 <div class="info"><span class="label">الجهة:</span> <span id="res-org"></span></div>
                 <div class="info"><span class="label">العنوان:</span> <span id="res-address"></span></div>
-                <div class="info"><span class="label">المنطقة/الحي:</span> <span id="res-region"></span></div>
+                <div class="info"><span class="label">المنطقة:</span> <span id="res-region"></span></div>
                 <select id="aidType">
                     <option value="كرتونة مواد غذائية">📦 كرتونة مواد غذائية</option>
                     <option value="لحوم">🥩 لحوم</option>
@@ -63,7 +65,13 @@
     </div>
 
     <script>
-        const users = { "ندى": "123", "أحمد": "456", "محمد": "789" };
+        const users = { 
+    "ندى": "123", 
+    "أحمد": "123", 
+    "محمد": "123", 
+    "علي": "123", 
+    "طارق": "123" 
+};
         // الرابط الجديد بتاعك
         const scriptURL = 'https://script.google.com/macros/s/AKfycbx-9Se_NnctYJ8edfEeNT9S9mFMU2DFXc7fEqSCxuMh40LqsKri4t6dst86P7Fn2EBC/exec';
         
