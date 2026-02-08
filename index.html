@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل المعونات - كاميرا خلفية</title>
+    <title>نظام تسجيل المعونات - اختيار الكاميرا</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
@@ -21,6 +21,7 @@
         .label { font-weight: bold; color: #5f6368; margin-left: 8px; }
         #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #1a73e8; min-height: 25px; }
         .user-badge { background: #e8f0fe; color: #1a73e8; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .camera-selector-box { margin-top: 10px; padding: 10px; background: #fffbe6; border-radius: 10px; border: 1px solid #ffe58f; }
         .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -45,7 +46,14 @@
 
         <div id="system-content">
             <div class="user-badge">👤 المسئول: <span id="logged-user-name"></span></div>
+            
             <div id="reader"></div>
+
+            <div class="camera-selector-box">
+                <label style="font-size: 0.9em; color: #856404;">📷 إذا فتحت الكاميرا الأمامية، اختر أخرى:</label>
+                <select id="cam-list" onchange="changeCamera(this.value)" style="padding: 8px; margin-top: 5px;"></select>
+            </div>
+
             <div id="msg"></div>
 
             <div id="result">
@@ -84,26 +92,49 @@
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('system-content').style.display = 'block';
                 document.getElementById('logged-user-name').innerText = loggedUser;
-                startScanner();
+                initCameraList();
             } else { 
                 document.getElementById('login-error').style.display = 'block'; 
             }
         }
 
-        function startScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        // 1. جلب كل الكاميرات المتاحة وعرضها في قائمة
+        function initCameraList() {
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    const camList = document.getElementById('cam-list');
+                    devices.forEach((device, index) => {
+                        const option = document.createElement('option');
+                        option.value = device.id;
+                        option.text = device.label || `كاميرا ${index + 1}`;
+                        camList.appendChild(option);
+                    });
+                    
+                    // اختيار آخر كاميرا تلقائياً (عادة تكون الخلفية)
+                    const lastCamId = devices[devices.length - 1].id;
+                    camList.value = lastCamId;
+                    startScanner(lastCamId);
+                }
+            }).catch(err => alert("خطأ في صلاحيات الكاميرا: " + err));
+        }
 
-            // الإجبار التقني للكاميرا الخلفية environment
+        function changeCamera(id) {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => startScanner(id));
+            } else {
+                startScanner(id);
+            }
+        }
+
+        function startScanner(cameraId) {
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+
             html5QrCode.start(
-                { facingMode: { exact: "environment" } }, 
+                cameraId, 
                 config,
                 onScanSuccess
-            ).catch(err => {
-                // إذا لم يجد كاميرا خلفية (مثل اللابتوب) يفتح الكاميرا العادية
-                console.warn("تعذر فرض الكاميرا الخلفية، يتم التشغيل التلقائي");
-                html5QrCode.start({ facingMode: "user" }, config, onScanSuccess);
-            });
+            ).catch(err => console.error("فشل التشغيل:", err));
         }
 
         function onScanSuccess(decodedText) {
@@ -112,10 +143,9 @@
                 const url = new URL(decodedText);
                 id = url.searchParams.get("id");
             }
-            
             if (id) {
                 currentID = id;
-                html5QrCode.pause(true); // إيقاف الكاميرا مؤقتاً عند التقاط الكود
+                html5QrCode.pause(true);
                 if (navigator.vibrate) navigator.vibrate(100);
                 fetchData(id);
             }
@@ -124,7 +154,6 @@
         function fetchData(id) {
             const msgDiv = document.getElementById('msg');
             msgDiv.innerHTML = '<div class="spinner"></div> جاري جلب البيانات...';
-            
             fetch(`${scriptURL}?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
@@ -137,11 +166,10 @@
                         document.getElementById('res-region').innerText = data[6] || "—";
                         msgDiv.innerText = "";
                     } else {
-                        alert("⚠️ المعرف غير مسجل!");
+                        alert("⚠️ غير مسجل!");
                         resetScanner();
                     }
-                })
-                .catch(() => {
+                }).catch(() => {
                     msgDiv.innerText = "❌ خطأ في الاتصال";
                     resetScanner();
                 });
@@ -151,21 +179,13 @@
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             document.getElementById('msg').innerHTML = '<div class="spinner"></div> جاري الحفظ...';
-
             fetch(scriptURL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ 
-                    id: currentID, 
-                    aidType: document.getElementById('aidType').value, 
-                    recorderName: loggedUser 
-                })
+                body: JSON.stringify({ id: currentID, aidType: document.getElementById('aidType').value, recorderName: loggedUser })
             }).then(() => {
                 alert("✅ تم التسجيل بنجاح!");
                 resetScanner();
-                btn.disabled = false;
-            }).catch(() => {
-                alert("❌ خطأ في الحفظ");
                 btn.disabled = false;
             });
         }
@@ -173,9 +193,7 @@
         function resetScanner() {
             document.getElementById('result').style.display = 'none';
             document.getElementById('msg').innerText = "";
-            if (html5QrCode) {
-                html5QrCode.resume();
-            }
+            if (html5QrCode) html5QrCode.resume();
         }
     </script>
 </body>
