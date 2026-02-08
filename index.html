@@ -3,198 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل المعونات - اختيار الكاميرا</title>
+    <title>نظام تسجيل المعونات</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
         .container { background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        h2 { color: #1a73e8; margin-bottom: 20px; font-weight: 700; text-align: center; }
+        h2 { color: #1a73e8; text-align: center; }
         #login-box { display: block; }
         #system-content { display: none; }
         input, select, button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; font-size: 1.1em; outline: none; box-sizing: border-box; }
-        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button:hover { background-color: #1557b0; transform: translateY(-2px); }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; border: 2px solid #1a73e8; }
+        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; }
         #result { display: none; text-align: right; border-top: 6px solid #28a745; margin-top: 25px; padding-top: 15px; }
         .info { font-size: 1.05em; margin-bottom: 12px; border-bottom: 1px solid #f1f1f1; padding-bottom: 8px; }
-        .label { font-weight: bold; color: #5f6368; margin-left: 8px; }
-        #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #1a73e8; min-height: 25px; }
-        .user-badge { background: #e8f0fe; color: #1a73e8; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
-        .camera-selector-box { margin-top: 10px; padding: 10px; background: #fffbe6; border-radius: 10px; border: 1px solid #ffe58f; }
-        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-left: 8px; }
+        .label { font-weight: bold; color: #5f6368; }
+        #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #d93025; }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s infinite; vertical-align: middle; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div id="login-box">
-            <h2>🔐 تسجيل الدخول</h2>
-            <select id="username">
-                <option value="">-- اختر المسئول --</option>
-                <option value="ندى">ندى</option>
-                <option value="أحمد">أحمد</option>
-                <option value="محمد">محمد</option>
-                <option value="علي">علي</option>
-                <option value="طارق">طارق</option>
-            </select>
-            <input type="password" id="password" placeholder="كلمة السر">
-            <button onclick="checkLogin()">دخول للنظام</button>
-            <p id="login-error" style="color:red; display:none; margin-top:10px; text-align:center;">❌ بيانات الدخول غير صحيحة</p>
-        </div>
-
-        <div id="system-content">
-            <div class="user-badge">👤 المسئول: <span id="logged-user-name"></span></div>
-            
-            <div id="reader"></div>
-
-            <div class="camera-selector-box">
-                <label style="font-size: 0.9em; color: #856404;">📷 إذا فتحت الكاميرا الأمامية، اختر أخرى:</label>
-                <select id="cam-list" onchange="changeCamera(this.value)" style="padding: 8px; margin-top: 5px;"></select>
-            </div>
-
-            <div id="msg"></div>
-
-            <div id="result">
-                <div class="info"><span class="label">الاسم:</span> <span id="res-name"></span></div>
-                <div class="info"><span class="label">الرقم القومي:</span> <span id="res-id"></span></div>
-                <div class="info"><span class="label">الجهة:</span> <span id="res-org"></span></div>
-                <div class="info"><span class="label">العنوان:</span> <span id="res-address"></span></div>
-                <div class="info"><span class="label">المنطقة:</span> <span id="res-region"></span></div>
-                
-                <label class="label">نوع المعونة:</label>
-                <select id="aidType">
-                    <option value="كرتونة مواد غذائية">📦 كرتونة مواد غذائية</option>
-                    <option value="لحوم">🥩 لحوم</option>
-                    <option value="معونة نقدية">💰 معونة نقدية</option>
-                    <option value="أخرى">✨ أخرى</option>
-                </select>
-                <button id="submitBtn" onclick="submitDelivery()">✅ تأكيد عملية التسليم</button>
-                <button onclick="resetScanner()" style="background-color: #6c757d;">🔄 مسح كود جديد</button>
-            </div>
-        </div>
+<div class="container">
+    <div id="login-box">
+        <h2>🔐 تسجيل الدخول</h2>
+        <select id="username">
+            <option value="">-- اختر المسئول --</option>
+            <option value="ندى">ندى</option>
+            <option value="أحمد">أحمد</option>
+            <option value="محمد">محمد</option>
+        </select>
+        <input type="password" id="password" placeholder="كلمة السر">
+        <button onclick="checkLogin()">دخول للنظام</button>
     </div>
 
-    <script>
-        const users = { "ندى": "123", "أحمد": "123", "محمد": "123", "علي": "123", "طارق": "123" };
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzRvIDgFGnJtac_IeSNQ5rjyJUUnes7OLQ3GgrMnoXLnfi9d_BXThR7mULY4HhP6Hnh/exec';
-        
-        let currentID = "";
-        let loggedUser = "";
-        let html5QrCode;
+    <div id="system-content">
+        <div id="reader"></div>
+        <div class="camera-selector-box" style="margin-top:10px;">
+            <select id="cam-list" onchange="changeCamera(this.value)"></select>
+        </div>
+        <div id="msg"></div>
 
-        function checkLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if (users[u] && users[u] === p) {
-                loggedUser = u;
-                document.getElementById('login-box').style.display = 'none';
-                document.getElementById('system-content').style.display = 'block';
-                document.getElementById('logged-user-name').innerText = loggedUser;
-                initCameraList();
-            } else { 
-                document.getElementById('login-error').style.display = 'block'; 
-            }
-        }
+        <div id="result">
+            <div class="info"><span class="label">الاسم:</span> <span id="res-name"></span></div>
+            <div class="info"><span class="label">الرقم القومي:</span> <span id="res-id"></span></div>
+            <label class="label">نوع المعونة:</label>
+            <select id="aidType">
+                <option value="كرتونة مواد غذائية">📦 كرتونة مواد غذائية</option>
+                <option value="لحوم">🥩 لحوم</option>
+            </select>
+            <button id="submitBtn" onclick="submitDelivery()">✅ تأكيد الاستلام</button>
+            <button onclick="resetScanner()" style="background: #6c757d;">🔄 مسح جديد</button>
+        </div>
+    </div>
+</div>
 
-        // 1. جلب كل الكاميرات المتاحة وعرضها في قائمة
-        function initCameraList() {
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    const camList = document.getElementById('cam-list');
-                    devices.forEach((device, index) => {
-                        const option = document.createElement('option');
-                        option.value = device.id;
-                        option.text = device.label || `كاميرا ${index + 1}`;
-                        camList.appendChild(option);
-                    });
-                    
-                    // اختيار آخر كاميرا تلقائياً (عادة تكون الخلفية)
-                    const lastCamId = devices[devices.length - 1].id;
-                    camList.value = lastCamId;
-                    startScanner(lastCamId);
-                }
-            }).catch(err => alert("خطأ في صلاحيات الكاميرا: " + err));
-        }
+<script>
+    const users = { "ندى": "123", "أحمد": "123", "محمد": "123" };
+    // تأكد أن هذا الرابط هو رابط الـ Executed API وليس رابط الشيت
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzRvIDgFGnJtac_IeSNQ5rjyJUUnes7OLQ3GgrMnoXLnfi9d_BXThR7mULY4HhP6Hnh/exec';
+    
+    let currentID = "";
+    let html5QrCode;
 
-        function changeCamera(id) {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => startScanner(id));
-            } else {
-                startScanner(id);
-            }
-        }
+    function checkLogin() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        if (users[u] === p) {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('system-content').style.display = 'block';
+            initCameraList();
+        } else { alert("خطأ في البيانات"); }
+    }
 
-        function startScanner(cameraId) {
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
-
-            html5QrCode.start(
-                cameraId, 
-                config,
-                onScanSuccess
-            ).catch(err => console.error("فشل التشغيل:", err));
-        }
-
-        function onScanSuccess(decodedText) {
-            let id = decodedText;
-            if (decodedText.includes("id=")) {
-                const url = new URL(decodedText);
-                id = url.searchParams.get("id");
-            }
-            if (id) {
-                currentID = id;
-                html5QrCode.pause(true);
-                if (navigator.vibrate) navigator.vibrate(100);
-                fetchData(id);
-            }
-        }
-
-        function fetchData(id) {
-            const msgDiv = document.getElementById('msg');
-            msgDiv.innerHTML = '<div class="spinner"></div> جاري جلب البيانات...';
-            fetch(`${scriptURL}?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data !== "Not Found") {
-                        document.getElementById('result').style.display = 'block';
-                        document.getElementById('res-name').innerText = data[1] || "—";
-                        document.getElementById('res-id').innerText = data[2] || "—";
-                        document.getElementById('res-org').innerText = data[12] || "—";
-                        document.getElementById('res-address').innerText = data[5] || "—";
-                        document.getElementById('res-region').innerText = data[6] || "—";
-                        msgDiv.innerText = "";
-                    } else {
-                        alert("⚠️ غير مسجل!");
-                        resetScanner();
-                    }
-                }).catch(() => {
-                    msgDiv.innerText = "❌ خطأ في الاتصال";
-                    resetScanner();
+    function initCameraList() {
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                const camList = document.getElementById('cam-list');
+                devices.forEach((device, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = device.id;
+                    opt.text = device.label || `كاميرا ${i+1}`;
+                    camList.appendChild(opt);
                 });
-        }
+                startScanner(devices[devices.length - 1].id);
+            }
+        });
+    }
 
-        function submitDelivery() {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            document.getElementById('msg').innerHTML = '<div class="spinner"></div> جاري الحفظ...';
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ id: currentID, aidType: document.getElementById('aidType').value, recorderName: loggedUser })
-            }).then(() => {
-                alert("✅ تم التسجيل بنجاح!");
+    function startScanner(id) {
+        if(html5QrCode) { html5QrCode.stop().then(() => { doStart(id); }); }
+        else { doStart(id); }
+    }
+
+    function doStart(id) {
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(id, { fps: 10, qrbox: 250 }, (txt) => {
+            let scanId = txt;
+            if (txt.includes("id=")) {
+                const url = new URL(txt);
+                scanId = url.searchParams.get("id");
+            }
+            currentID = scanId;
+            html5QrCode.pause(true);
+            fetchData(scanId);
+        });
+    }
+
+    function fetchData(id) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.innerHTML = '<div class="spinner"></div> جاري البحث عن الرقم: ' + id;
+        
+        // أضفنا Timestamp لمنع التخزين المؤقت (Cache)
+        fetch(`${scriptURL}?id=${id}&t=${new Date().getTime()}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data received:", data);
+                if (data && data !== "Not Found") {
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('res-name').innerText = data[1] || "غير متوفر";
+                    document.getElementById('res-id').innerText = data[2] || "غير متوفر";
+                    msgDiv.innerHTML = "";
+                } else {
+                    alert("❌ هذا الرقم (" + id + ") غير موجود في قاعدة البيانات");
+                    resetScanner();
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                alert("❌ خطأ في الاتصال بالخادم. تأكد من نشر السكريبت كـ (Anyone) ووصول الإنترنت.");
                 resetScanner();
-                btn.disabled = false;
             });
-        }
+    }
 
-        function resetScanner() {
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('msg').innerText = "";
-            if (html5QrCode) html5QrCode.resume();
-        }
-    </script>
+    function resetScanner() {
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('msg').innerHTML = "";
+        if (html5QrCode) html5QrCode.resume();
+    }
+
+    function changeCamera(id) { startScanner(id); }
+</script>
 </body>
 </html>
