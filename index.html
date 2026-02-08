@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل المعونات الاحترافي</title>
+    <title>نظام تسجيل المعونات - كاميرا خلفية</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
@@ -14,18 +14,14 @@
         input, select, button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; font-size: 1.1em; outline: none; box-sizing: border-box; }
         button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         button:hover { background-color: #1557b0; transform: translateY(-2px); }
-        button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; border: 2px solid #1a73e8; }
         #result { display: none; text-align: right; border-top: 6px solid #28a745; margin-top: 25px; padding-top: 15px; }
         .info { font-size: 1.05em; margin-bottom: 12px; border-bottom: 1px solid #f1f1f1; padding-bottom: 8px; }
         .label { font-weight: bold; color: #5f6368; margin-left: 8px; }
-        #submitBtn { background-color: #28a745; }
-        #resetBtn { background-color: #6c757d; margin-bottom: 10px; display: none; }
         #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #1a73e8; min-height: 25px; }
         .user-badge { background: #e8f0fe; color: #1a73e8; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
-        
-        /* Loading Animation */
-        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s ease-in-out infinite; margin-left: 10px; vertical-align: middle; }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(26,115,232,.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s ease-in-out infinite; vertical-align: middle; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -49,11 +45,7 @@
 
         <div id="system-content">
             <div class="user-badge">👤 المسئول: <span id="logged-user-name"></span></div>
-            
             <div id="reader"></div>
-            
-            <button id="resetBtn" onclick="resetScanner()">🔄 مسح كود جديد</button>
-            
             <div id="msg"></div>
 
             <div id="result">
@@ -71,6 +63,7 @@
                     <option value="أخرى">✨ أخرى</option>
                 </select>
                 <button id="submitBtn" onclick="submitDelivery()">✅ تأكيد عملية التسليم</button>
+                <button onclick="resetScanner()" style="background-color: #6c757d;">🔄 مسح كود جديد</button>
             </div>
         </div>
     </div>
@@ -81,8 +74,7 @@
         
         let currentID = "";
         let loggedUser = "";
-        let isScanning = true;
-        let html5QrcodeScanner;
+        let html5QrCode;
 
         function checkLogin() {
             const u = document.getElementById('username').value;
@@ -92,63 +84,52 @@
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('system-content').style.display = 'block';
                 document.getElementById('logged-user-name').innerText = loggedUser;
-                initScanner();
+                startScanner();
             } else { 
                 document.getElementById('login-error').style.display = 'block'; 
             }
         }
 
-        function initScanner() {
-            // استخدام التكوين المتقدم لضمان الكاميرا الخلفية
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            };
+        function startScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", config, false);
-            
-            // بدء التشغيل مع طلب الكاميرا الخلفية تحديداً
-            html5QrcodeScanner.render(onScanSuccess);
-            
-            // محاولة إجبار المتصفح على الكاميرا الخلفية بعد ثانية من التحميل
-            setTimeout(() => {
-                const videoConstraints = { video: { facingMode: { exact: "environment" } } };
-                // ملاحظة: Html5QrcodeScanner يتعامل داخلياً مع الاختيار، 
-                // إذا لم تعمل الخلفية تلقائياً، سيظهر زر "Switch Camera" للمستخدم.
-            }, 1000);
+            // الإجبار التقني للكاميرا الخلفية environment
+            html5QrCode.start(
+                { facingMode: { exact: "environment" } }, 
+                config,
+                onScanSuccess
+            ).catch(err => {
+                // إذا لم يجد كاميرا خلفية (مثل اللابتوب) يفتح الكاميرا العادية
+                console.warn("تعذر فرض الكاميرا الخلفية، يتم التشغيل التلقائي");
+                html5QrCode.start({ facingMode: "user" }, config, onScanSuccess);
+            });
         }
 
         function onScanSuccess(decodedText) {
-            if (!isScanning) return;
-            try {
-                let id = decodedText;
-                if (decodedText.includes("id=")) {
-                    const url = new URL(decodedText);
-                    id = url.searchParams.get("id");
-                }
-                
-                if (id) {
-                    isScanning = false;
-                    currentID = id;
-                    // تفعيل الاهتزاز عند نجاح السكان (في الهواتف المدعومة)
-                    if (navigator.vibrate) navigator.vibrate(100);
-                    fetchData(id);
-                }
-            } catch (e) { console.error("QR Error"); }
+            let id = decodedText;
+            if (decodedText.includes("id=")) {
+                const url = new URL(decodedText);
+                id = url.searchParams.get("id");
+            }
+            
+            if (id) {
+                currentID = id;
+                html5QrCode.pause(true); // إيقاف الكاميرا مؤقتاً عند التقاط الكود
+                if (navigator.vibrate) navigator.vibrate(100);
+                fetchData(id);
+            }
         }
 
         function fetchData(id) {
             const msgDiv = document.getElementById('msg');
-            msgDiv.innerHTML = '<div class="spinner"></div> جاري البحث في السجلات...';
+            msgDiv.innerHTML = '<div class="spinner"></div> جاري جلب البيانات...';
             
             fetch(`${scriptURL}?id=${id}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data !== "Not Found" && Array.isArray(data)) {
+                    if (data !== "Not Found") {
                         document.getElementById('result').style.display = 'block';
-                        document.getElementById('resetBtn').style.display = 'block';
-                        
                         document.getElementById('res-name').innerText = data[1] || "—";
                         document.getElementById('res-id').innerText = data[2] || "—";
                         document.getElementById('res-org').innerText = data[12] || "—";
@@ -156,43 +137,45 @@
                         document.getElementById('res-region').innerText = data[6] || "—";
                         msgDiv.innerText = "";
                     } else {
-                        alert("⚠️ عذراً، الرقم القومي غير مسجل");
+                        alert("⚠️ المعرف غير مسجل!");
                         resetScanner();
                     }
                 })
-                .catch(err => {
-                    msgDiv.innerHTML = "<span style='color:red'>❌ خطأ في الاتصال بالسيرفر</span>";
+                .catch(() => {
+                    msgDiv.innerText = "❌ خطأ في الاتصال";
                     resetScanner();
                 });
         }
 
         function submitDelivery() {
             const btn = document.getElementById('submitBtn');
-            const aid = document.getElementById('aidType').value;
-            
             btn.disabled = true;
             document.getElementById('msg').innerHTML = '<div class="spinner"></div> جاري الحفظ...';
 
             fetch(scriptURL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify({ id: currentID, aidType: aid, recorderName: loggedUser })
+                body: JSON.stringify({ 
+                    id: currentID, 
+                    aidType: document.getElementById('aidType').value, 
+                    recorderName: loggedUser 
+                })
             }).then(() => {
                 alert("✅ تم التسجيل بنجاح!");
                 resetScanner();
                 btn.disabled = false;
-            }).catch(err => {
-                alert("❌ فشل في الحفظ");
+            }).catch(() => {
+                alert("❌ خطأ في الحفظ");
                 btn.disabled = false;
             });
         }
 
         function resetScanner() {
-            isScanning = true;
-            currentID = "";
             document.getElementById('result').style.display = 'none';
-            document.getElementById('resetBtn').style.display = 'none';
             document.getElementById('msg').innerText = "";
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
         }
     </script>
 </body>
