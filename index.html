@@ -1,166 +1,171 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل المعونات الاحترافي</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
-        .container { background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-        h2 { color: #1a73e8; margin-bottom: 20px; font-weight: 700; text-align: center; }
-        #login-box { display: block; }
-        #system-content { display: none; }
-        input, select, button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; font-size: 1.1em; outline: none; box-sizing: border-box; }
-        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button:hover { background-color: #1557b0; transform: translateY(-2px); }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; }
-        #result { display: none; text-align: right; border-top: 6px solid #28a745; margin-top: 25px; padding-top: 15px; }
-        .info { font-size: 1.05em; margin-bottom: 12px; border-bottom: 1px solid #f1f1f1; padding-bottom: 8px; }
-        .label { font-weight: bold; color: #5f6368; margin-left: 8px; }
-        #submitBtn { background-color: #28a745; }
-        #resetBtn { background-color: #6c757d; margin-bottom: 10px; display: none; }
-        #msg { margin-top: 15px; font-weight: bold; text-align: center; color: #d93025; min-height: 24px; }
-        .user-badge { background: #e8f0fe; color: #1a73e8; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; width: 100%; text-align: center; box-sizing: border-box; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تسجيل المعونات الاحترافي</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 10px; }
+        .container { background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: #1a73e8; margin-bottom: 20px; font-weight: 700; }
+        #login-box { display: block; }
+        #system-content { display: none; }
+        input, select, button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: 2px solid #ddd; font-size: 1.1em; outline: none; box-sizing: border-box; }
+        button { background-color: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:hover { background-color: #1557b0; transform: translateY(-2px); }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #000; margin-top: 15px; }
+        #result { display: none; text-align: right; border-top: 6px solid #28a745; margin-top: 25px; padding-top: 15px; }
+        .info { font-size: 1.05em; margin-bottom: 12px; border-bottom: 1px solid #f1f1f1; padding-bottom: 8px; }
+        .label { font-weight: bold; color: #5f6368; margin-left: 8px; }
+        #submitBtn { background-color: #28a745; }
+        #resetBtn { background-color: #6c757d; margin-bottom: 10px; }
+        #msg { margin-top: 15px; font-weight: bold; color: #d93025; }
+        .user-badge { background: #e8f0fe; color: #1a73e8; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <div id="login-box">
-            <h2>🔐 تسجيل الدخول</h2>
-            <select id="username">
-                <option value="">-- اختر المسئول --</option>
-                <option value="ندى">ندى</option>
-                <option value="أحمد">أحمد</option>
-                <option value="محمد">محمد</option>
-                <option value="علي">علي</option>
-                <option value="طارق">طارق</option>
-            </select>
-            <input type="password" id="password" placeholder="كلمة السر">
-            <button onclick="checkLogin()">دخول للنظام</button>
-            <p id="login-error" style="color:red; display:none; margin-top:10px; text-align:center;">❌ بيانات الدخول غير صحيحة</p>
-        </div>
+    <div class="container">
+        <div id="login-box">
+            <h2>🔐 تسجيل الدخول</h2>
+            <select id="username">
+                <option value="">-- اختر المسئول --</option>
+                <option value="ندى">ندى</option>
+                <option value="أحمد">أحمد</option>
+                <option value="محمد">محمد</option>
+                <option value="علي">علي</option>
+                <option value="طارق">طارق</option>
+            </select>
+            <input type="password" id="password" placeholder="كلمة السر">
+            <button onclick="checkLogin()">دخول للنظام</button>
+            <p id="login-error" style="color:red; display:none; margin-top:10px;">❌ بيانات الدخول غير صحيحة</p>
+        </div>
 
-        <div id="system-content">
-            <div class="user-badge">👤 المسئول: <span id="logged-user-name"></span></div>
-            <div id="reader"></div>
-            <button id="resetBtn" onclick="resetScanner()">🔄 مسح كود جديد</button>
-            <div id="msg"></div>
-            
-            <div id="result">
-                <div class="info"><span class="label">الاسم:</span> <span id="res-name"></span></div>
-                <div class="info"><span class="label">الرقم القومي:</span> <span id="res-id"></span></div>
-                <div class="info"><span class="label">الجهة:</span> <span id="res-org"></span></div>
-                <div class="info"><span class="label">العنوان:</span> <span id="res-address"></span></div>
-                <div class="info"><span class="label">المنطقة:</span> <span id="res-region"></span></div>
-                
-                <select id="aidType">
-                    <option value="كرتونة مواد غذائية">📦 كرتونة مواد غذائية</option>
-                    <option value="لحوم">🥩 لحوم</option>
-                    <option value="معونة نقدية">💰 معونة نقدية</option>
-                    <option value="أخرى">✨ أخرى</option>
-                </select>
-                <button id="submitBtn" onclick="submitDelivery()">✅ تأكيد عملية التسليم</button>
-            </div>
-        </div>
-    </div>
+        <div id="system-content">
+            <div class="user-badge">👤 المسئول: <span id="logged-user-name"></span></div>
+            <div id="reader"></div>
+            <button id="resetBtn" onclick="resetScanner()">🔄 مسح كود جديد</button>
+            <div id="result">
+                <div class="info"><span class="label">الاسم:</span> <span id="res-name"></span></div>
+                <div class="info"><span class="label">الرقم القومي:</span> <span id="res-id"></span></div>
+                <div class="info"><span class="label">الجهة:</span> <span id="res-org"></span></div>
+                <div class="info"><span class="label">العنوان:</span> <span id="res-address"></span></div>
+                <div class="info"><span class="label">المنطقة:</span> <span id="res-region"></span></div>
+                <select id="aidType">
+                    <option value="كرتونة مواد غذائية">📦 كرتونة مواد غذائية</option>
+                    <option value="لحوم">🥩 لحوم</option>
+                    <option value="معونة نقدية">💰 معونة نقدية</option>
+                    <option value="أخرى">✨ أخرى</option>
+                </select>
+                <button id="submitBtn" onclick="submitDelivery()">✅ تأكيد عملية التسليم</button>
+            </div>
+            <div id="msg"></div>
+        </div>
+    </div>
 
-    <script>
-        const users = { "ندى": "123", "أحمد": "123", "محمد": "123", "علي": "123", "طارق": "123" };
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzt7oyqA-GmXkxHS0EpvTjTnDmuKljeKfm66zcQ1948DlaYbWWJnGjN9qnSmr060cba/exec';
-        
-        let currentID = "";
-        let loggedUser = "";
-        let isScanning = true;
-        let html5QrCode;
+    <script>
+        const users = { 
+    "ندى": "123", 
+    "أحمد": "123", 
+    "محمد": "123", 
+    "علي": "123", 
+    "طارق": "123" 
+};
+        // الرابط الجديد بتاعك
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxT0XYUWsSFACdnprNhQHc8X9Ncl1Ze5ZVkI-sFxv_w1nrlVCC47sfxgDeGBoK0NWpD/exec';
+        
+        let currentID = "";
+        let loggedUser = "";
+        let isScanning = true;
+        let html5QrcodeScanner;
 
-        function checkLogin() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if (users[u] && users[u] === p) {
-                loggedUser = u;
-                document.getElementById('login-box').style.display = 'none';
-                document.getElementById('system-content').style.display = 'block';
-                document.getElementById('logged-user-name').innerText = loggedUser;
-                initScanner();
-            } else { 
-                document.getElementById('login-error').style.display = 'block'; 
-            }
-        }
+        function checkLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            if (users[u] && users[u] === p) {
+                loggedUser = u;
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('system-content').style.display = 'block';
+                document.getElementById('logged-user-name').innerText = loggedUser;
+                initScanner();
+            } else { document.getElementById('login-error').style.display = 'block'; }
+        }
 
-        function initScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess);
-        }
+        function initScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+                fps: 10, qrbox: 250,
+                videoConstraints: { facingMode: { exact: "environment" } },
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA, Html5QrcodeScanType.SCAN_TYPE_FILE]
+            });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
 
-        function onScanSuccess(decodedText) {
-            if (!isScanning) return;
-            isScanning = false;
-            
-            // استخراج الرقم من الرابط أو استخدامه مباشرة
-            currentID = decodedText;
-            if (decodedText.includes("id=")) {
-                const urlParams = new URLSearchParams(decodedText.split('?')[1]);
-                currentID = urlParams.get("id");
-            }
-            
-            fetchData(currentID);
-        }
+        function onScanSuccess(decodedText) {
+            if (!isScanning) return;
+            try {
+                const url = new URL(decodedText);
+                currentID = url.searchParams.get("id");
+                if (currentID) {
+                    isScanning = false;
+                    fetchData(currentID);
+                }
+            } catch (e) { console.error("QR Code Error"); }
+        }
 
-        function fetchData(id) {
-            document.getElementById('msg').innerText = "⏳ جاري البحث عن الرقم: " + id;
-            fetch(`${scriptURL}?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data !== "Not Found") {
-                        document.getElementById('result').style.display = 'block';
-                        document.getElementById('resetBtn').style.display = 'block';
-                        // تعيين البيانات بناءً على ترتيب الأعمدة في السكريبت الخاص بك
-                        document.getElementById('res-name').innerText = data[1] || "—";
-                        document.getElementById('res-id').innerText = data[2] || "—";
-                        document.getElementById('res-address').innerText = data[5] || "—";
-                        document.getElementById('res-region').innerText = data[6] || "—";
-                        document.getElementById('res-org').innerText = data[12] || "—";
-                        document.getElementById('msg').innerText = "";
-                    } else {
-                        alert("⚠️ الرقم غير موجود بالسجلات");
-                        resetScanner();
-                    }
-                })
-                .catch(err => {
-                    document.getElementById('msg').innerText = "❌ خطأ في الاتصال بالخادم";
-                    console.error(err);
-                });
-        }
+        function fetchData(id) {
+            document.getElementById('msg').innerText = "⏳ جاري جلب البيانات من السجل...";
+            fetch(`${scriptURL}?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data !== "Not Found") {
+                        document.getElementById('result').style.display = 'block';
+                        document.getElementById('resetBtn').style.display = 'block';
+                        // الترتيب حسب الأعمدة (B=1, C=2, F=5, G=6, M=12)
+                        document.getElementById('res-name').innerText = data[1] || "—";
+                        document.getElementById('res-id').innerText = data[2] || "—";
+                        document.getElementById('res-org').innerText = data[12] || "—";
+                        document.getElementById('res-address').innerText = data[5] || "—";
+                        document.getElementById('res-region').innerText = data[6] || "—";
+                        document.getElementById('msg').innerText = "";
+                    } else {
+                        alert("⚠️ المعرف غير مسجل");
+                        resetScanner();
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('msg').innerText = "❌ حدث خطأ في الاتصال";
+                    console.error(err);
+                });
+        }
 
-        function submitDelivery() {
-            const btn = document.getElementById('submitBtn');
-            const aid = document.getElementById('aidType').value;
-            btn.disabled = true;
-            document.getElementById('msg').innerText = "🔄 جاري تسجيل العملية...";
+        function submitDelivery() {
+            const btn = document.getElementById('submitBtn');
+            const aid = document.getElementById('aidType').value;
+            btn.disabled = true;
+            document.getElementById('msg').innerText = "🔄 جاري الحفظ باسم " + loggedUser + "...";
 
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ id: currentID, aidType: aid, recorderName: loggedUser })
-            }).then(() => {
-                alert("🎊 تم التسجيل بنجاح لـ: " + document.getElementById('res-name').innerText);
-                resetScanner();
-                btn.disabled = false;
-            }).catch(err => {
-                alert("❌ فشل الاتصال");
-                btn.disabled = false;
-            });
-        }
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ id: currentID, aidType: aid, recorderName: loggedUser })
+            }).then(() => {
+                alert("🎊 تم تسجيل العملية بنجاح!");
+                resetScanner();
+                btn.disabled = false;
+            }).catch(err => {
+                alert("خطأ في التسجيل");
+                btn.disabled = false;
+            });
+        }
 
-        function resetScanner() {
-            isScanning = true;
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('resetBtn').style.display = 'none';
-            document.getElementById('msg').innerText = "";
-        }
-    </script>
+        function resetScanner() {
+            isScanning = true;
+            currentID = "";
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('msg').innerText = "";
+        }
+    </script>
 </body>
 </html>
